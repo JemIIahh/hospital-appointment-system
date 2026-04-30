@@ -72,12 +72,9 @@
                     </ul>
                 @endif
                 <div class="card-body">
-                    <button class="btn btn-primary w-100" disabled>
+                    <a href="{{ route('patient.appointments.create', $doctor) }}" class="btn btn-primary w-100">
                         <i class="bi bi-calendar-plus me-1"></i> Book Appointment
-                    </button>
-                    <p class="text-center text-muted small mt-2 mb-0">
-                        Booking goes live in Phase 8
-                    </p>
+                    </a>
                 </div>
             </div>
         </div>

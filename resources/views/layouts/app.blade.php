@@ -39,6 +39,11 @@
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('doctor.dashboard') ? 'active' : '' }}" href="{{ route('doctor.dashboard') }}">Dashboard</a>
                             </li>
+                            @if(Route::has('doctor.appointments.index'))
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->routeIs('doctor.appointments.*') ? 'active' : '' }}" href="{{ route('doctor.appointments.index') }}">Appointments</a>
+                                </li>
+                            @endif
                         @elseif(Auth::user()->isPatient())
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('patient.dashboard') ? 'active' : '' }}" href="{{ route('patient.dashboard') }}">Dashboard</a>
@@ -46,6 +51,11 @@
                             @if(Route::has('patient.doctors.index'))
                                 <li class="nav-item">
                                     <a class="nav-link {{ request()->routeIs('patient.doctors.*') ? 'active' : '' }}" href="{{ route('patient.doctors.index') }}">Browse Doctors</a>
+                                </li>
+                            @endif
+                            @if(Route::has('patient.appointments.index'))
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->routeIs('patient.appointments.*') ? 'active' : '' }}" href="{{ route('patient.appointments.index') }}">My Appointments</a>
                                 </li>
                             @endif
                         @endif

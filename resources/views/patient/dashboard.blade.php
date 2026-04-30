@@ -61,15 +61,34 @@
     <div class="row g-3">
         <div class="col-lg-7">
             <div class="card">
-                <div class="card-header bg-white">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <strong><i class="bi bi-calendar-week me-2"></i>Upcoming Appointments</strong>
+                    @if($upcomingAppointments->isNotEmpty())
+                        <a href="{{ route('patient.appointments.index') }}" class="small">View all</a>
+                    @endif
                 </div>
                 @if($upcomingAppointments->isEmpty())
                     <div class="empty-state">
                         <i class="bi bi-calendar-x"></i>
-                        <p class="text-muted mb-1">No upcoming appointments yet.</p>
-                        <p class="text-muted small mb-0">Booking goes live in Phase 8.</p>
+                        <p class="text-muted mb-2">No upcoming appointments yet.</p>
+                        <a href="{{ route('patient.doctors.index') }}" class="btn btn-sm btn-outline-primary">Browse doctors</a>
                     </div>
+                @else
+                    <ul class="list-group list-group-flush">
+                        @foreach($upcomingAppointments as $appt)
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-semibold">Dr. {{ $appt->doctor->user->name }}</div>
+                                    <div class="small text-muted">
+                                        {{ $appt->appointment_date->format('D, M j') }} at
+                                        {{ \Carbon\Carbon::parse($appt->appointment_time)->format('g:i A') }}
+                                        &middot; {{ $appt->doctor->department->name }}
+                                    </div>
+                                </div>
+                                <a href="{{ route('patient.appointments.show', $appt) }}" class="btn btn-sm btn-outline-secondary">View</a>
+                            </li>
+                        @endforeach
+                    </ul>
                 @endif
             </div>
         </div>

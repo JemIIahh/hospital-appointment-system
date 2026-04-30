@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -50,5 +51,24 @@ class Appointment extends Model
     public function payment(): HasOne
     {
         return $this->hasOne(Payment::class);
+    }
+
+    public function scopeActive(Builder $query): void
+    {
+        $query->where('status', '!=', 'cancelled');
+    }
+
+    public function scopeUpcoming(Builder $query): void
+    {
+        $query->whereIn('status', ['pending', 'confirmed'])
+              ->whereDate('appointment_date', '>=', now()->toDateString());
+    }
+
+    public function scopeHistorical(Builder $query): void
+    {
+        $query->where(function (Builder $q) {
+            $q->whereDate('appointment_date', '<', now()->toDateString())
+              ->orWhereIn('status', ['cancelled', 'completed', 'no_show']);
+        });
     }
 }

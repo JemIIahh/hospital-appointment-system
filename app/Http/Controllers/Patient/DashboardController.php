@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Patient;
 
 use App\Http\Controllers\Controller;
+use App\Models\Appointment;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
@@ -12,9 +13,19 @@ class DashboardController extends Controller
     {
         $patient = Auth::user()->patient;
 
+        $upcomingAppointments = $patient
+            ? Appointment::where('patient_id', $patient->id)
+                ->upcoming()
+                ->with(['doctor.user', 'doctor.department'])
+                ->orderBy('appointment_date')
+                ->orderBy('appointment_time')
+                ->take(5)
+                ->get()
+            : collect();
+
         return view('patient.dashboard', [
             'patient'              => $patient,
-            'upcomingAppointments' => collect(),
+            'upcomingAppointments' => $upcomingAppointments,
             'recentRecords'        => collect(),
         ]);
     }
