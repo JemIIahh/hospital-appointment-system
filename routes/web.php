@@ -3,6 +3,8 @@
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\DepartmentController as AdminDepartmentController;
 use App\Http\Controllers\Admin\DoctorController as AdminDoctorController;
+use App\Http\Controllers\Patient\DashboardController as PatientDashboardController;
+use App\Http\Controllers\Patient\DoctorController as PatientDoctorController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -25,8 +27,10 @@ Route::middleware(['auth', 'role:doctor'])->group(function () {
     Route::view('/doctor/dashboard', 'doctor.dashboard')->name('doctor.dashboard');
 });
 
-Route::middleware(['auth', 'role:patient'])->group(function () {
-    Route::view('/patient/dashboard', 'patient.dashboard')->name('patient.dashboard');
+Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')->group(function () {
+    Route::get('/dashboard', [PatientDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/doctors', [PatientDoctorController::class, 'index'])->name('doctors.index');
+    Route::get('/doctors/{doctor}', [PatientDoctorController::class, 'show'])->name('doctors.show');
 });
 
 Route::middleware('auth')->group(function () {

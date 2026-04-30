@@ -21,6 +21,36 @@
             @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
         </div>
 
+        <div class="row">
+            <div class="col-md-7 mb-3">
+                <label for="date_of_birth" class="form-label">Date of Birth</label>
+                <input id="date_of_birth" type="date" name="date_of_birth"
+                    value="{{ old('date_of_birth') }}"
+                    max="{{ now()->subYear()->toDateString() }}"
+                    class="form-control @error('date_of_birth') is-invalid @enderror" required>
+                @error('date_of_birth')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <div class="col-md-5 mb-3">
+                <label for="gender" class="form-label">Gender</label>
+                <select id="gender" name="gender"
+                    class="form-select @error('gender') is-invalid @enderror" required>
+                    <option value="">— Select —</option>
+                    <option value="male"   @selected(old('gender') === 'male')>Male</option>
+                    <option value="female" @selected(old('gender') === 'female')>Female</option>
+                    <option value="other"  @selected(old('gender') === 'other')>Other</option>
+                </select>
+                @error('gender')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="phone" class="form-label">Phone <span class="text-muted small">(optional)</span></label>
+            <input id="phone" type="text" name="phone" value="{{ old('phone') }}"
+                class="form-control @error('phone') is-invalid @enderror"
+                autocomplete="tel">
+            @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+
         <div class="mb-3">
             <label for="password" class="form-label">Password</label>
             <input id="password" type="password" name="password"

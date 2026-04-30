@@ -43,6 +43,11 @@
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('patient.dashboard') ? 'active' : '' }}" href="{{ route('patient.dashboard') }}">Dashboard</a>
                             </li>
+                            @if(Route::has('patient.doctors.index'))
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->routeIs('patient.doctors.*') ? 'active' : '' }}" href="{{ route('patient.doctors.index') }}">Browse Doctors</a>
+                                </li>
+                            @endif
                         @endif
                     @endauth
                 </ul>
