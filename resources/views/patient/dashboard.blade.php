@@ -94,15 +94,34 @@
         </div>
         <div class="col-lg-5">
             <div class="card">
-                <div class="card-header bg-white">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <strong><i class="bi bi-file-medical me-2"></i>Recent Medical Records</strong>
+                    @if($recentRecords->isNotEmpty())
+                        <a href="{{ route('patient.records.index') }}" class="small">View all</a>
+                    @endif
                 </div>
                 @if($recentRecords->isEmpty())
                     <div class="empty-state">
                         <i class="bi bi-file-earmark-medical"></i>
-                        <p class="text-muted mb-1">No records yet.</p>
-                        <p class="text-muted small mb-0">Records appear after consultations (Phase 9).</p>
+                        <p class="text-muted mb-0">No records yet.</p>
                     </div>
+                @else
+                    <ul class="list-group list-group-flush">
+                        @foreach($recentRecords as $rec)
+                            <li class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold">{{ Str::limit($rec->diagnosis, 50) }}</div>
+                                        <div class="small text-muted">
+                                            Dr. {{ $rec->appointment->doctor->user->name }} &middot;
+                                            {{ $rec->appointment->appointment_date->format('M j, Y') }}
+                                        </div>
+                                    </div>
+                                    <a href="{{ route('patient.records.show', $rec) }}" class="btn btn-sm btn-outline-secondary">View</a>
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
                 @endif
             </div>
         </div>

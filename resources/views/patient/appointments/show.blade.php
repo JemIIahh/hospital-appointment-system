@@ -61,6 +61,24 @@
                     <p class="mb-0">{{ $appointment->reason }}</p>
                 </div>
             </div>
+
+            @php $appointment->load('medicalRecord'); $record = $appointment->medicalRecord; @endphp
+            @if($record)
+                <div class="card mt-3">
+                    <div class="card-header bg-white">
+                        <strong><i class="bi bi-file-medical me-2"></i>Consultation Notes</strong>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="text-uppercase small text-muted">Diagnosis</h6>
+                        <p>{{ $record->diagnosis }}</p>
+
+                        @if($record->notes)
+                            <h6 class="text-uppercase small text-muted mt-3">Notes from Dr. {{ $appointment->doctor->user->name }}</h6>
+                            <p class="mb-0" style="white-space: pre-wrap;">{{ $record->notes }}</p>
+                        @endif
+                    </div>
+                </div>
+            @endif
         </div>
 
         <div class="col-lg-4">

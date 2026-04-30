@@ -113,15 +113,113 @@
 
             <div class="card mt-3">
                 <div class="card-body">
-                    <h6 class="mb-2">Consultation</h6>
+                    <h6 class="mb-2">Prescription</h6>
                     <button class="btn btn-outline-secondary w-100" disabled>
-                        <i class="bi bi-file-medical me-1"></i> Add Consultation Notes
+                        <i class="bi bi-prescription2 me-1"></i> Add Prescription
                     </button>
                     <p class="text-muted small mt-2 mb-0">
-                        Medical records and prescriptions arrive in Phase 9 &amp; 11.
+                        Prescriptions and PDF generation arrive in Phase 11.
                     </p>
                 </div>
             </div>
+        </div>
+    </div>
+
+    {{-- Consultation notes section (full-width below) --}}
+    @php
+        $writable = in_array($appointment->status, ['confirmed', 'completed'], true);
+        $appointment->load('medicalRecord');
+        $record = $appointment->medicalRecord;
+    @endphp
+
+    <div class="card mt-3">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <strong><i class="bi bi-file-medical me-2"></i>Consultation Notes</strong>
+            @if($record && $writable)
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        x-data x-on:click="$dispatch('toggle-edit-notes')">
+                    <i class="bi bi-pencil"></i> Edit
+                </button>
+            @endif
+        </div>
+        <div class="card-body" x-data="{ editing: {{ $record ? 'false' : 'true' }} }"
+             x-on:toggle-edit-notes.window="editing = !editing">
+
+            @if(! $writable && ! $record)
+                <p class="text-muted mb-0">
+                    Notes can only be added for confirmed or completed appointments.
+                    Current status: <span class="badge text-bg-secondary">{{ $appointment->status }}</span>
+                </p>
+
+            @elseif($record)
+                {{-- Read view --}}
+                <div x-show="!editing">
+                    <h6 class="text-uppercase small text-muted">Diagnosis</h6>
+                    <p>{{ $record->diagnosis }}</p>
+
+                    @if($record->notes)
+                        <h6 class="text-uppercase small text-muted mt-3">Notes</h6>
+                        <p class="mb-0" style="white-space: pre-wrap;">{{ $record->notes }}</p>
+                    @endif
+
+                    <p class="text-muted small mt-3 mb-0">
+                        Last updated {{ $record->updated_at->diffForHumans() }}
+                    </p>
+                </div>
+
+                {{-- Edit form --}}
+                <div x-show="editing" style="display:none">
+                    <form action="{{ route('doctor.appointments.notes.update', $appointment) }}" method="POST">
+                        @csrf
+                        @method('PATCH')
+
+                        <div class="mb-3">
+                            <label for="diagnosis" class="form-label">Diagnosis <span class="text-danger">*</span></label>
+                            <textarea id="diagnosis" name="diagnosis" rows="2" required maxlength="5000"
+                                class="form-control @error('diagnosis') is-invalid @enderror">{{ old('diagnosis', $record->diagnosis) }}</textarea>
+                            @error('diagnosis')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea id="notes" name="notes" rows="5" maxlength="10000"
+                                class="form-control @error('notes') is-invalid @enderror">{{ old('notes', $record->notes) }}</textarea>
+                            @error('notes')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-outline-secondary" x-on:click="editing = false">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </form>
+                </div>
+
+            @else
+                {{-- Create form --}}
+                <form action="{{ route('doctor.appointments.notes.store', $appointment) }}" method="POST">
+                    @csrf
+
+                    <div class="mb-3">
+                        <label for="diagnosis" class="form-label">Diagnosis <span class="text-danger">*</span></label>
+                        <textarea id="diagnosis" name="diagnosis" rows="2" required maxlength="5000"
+                            placeholder="Primary diagnosis, e.g. Hypertension stage 2"
+                            class="form-control @error('diagnosis') is-invalid @enderror">{{ old('diagnosis') }}</textarea>
+                        @error('diagnosis')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea id="notes" name="notes" rows="5" maxlength="10000"
+                            placeholder="Detailed observations, recommended follow-up, lifestyle advice, etc."
+                            class="form-control @error('notes') is-invalid @enderror">{{ old('notes') }}</textarea>
+                        @error('notes')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i> Save Consultation Notes
+                    </button>
+                </form>
+            @endif
         </div>
     </div>
 </x-app-layout>

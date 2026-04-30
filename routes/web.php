@@ -5,9 +5,11 @@ use App\Http\Controllers\Admin\DepartmentController as AdminDepartmentController
 use App\Http\Controllers\Admin\DoctorController as AdminDoctorController;
 use App\Http\Controllers\Doctor\AppointmentController as DoctorAppointmentController;
 use App\Http\Controllers\Doctor\DashboardController as DoctorDashboardController;
+use App\Http\Controllers\Doctor\MedicalRecordController as DoctorMedicalRecordController;
 use App\Http\Controllers\Patient\AppointmentController as PatientAppointmentController;
 use App\Http\Controllers\Patient\DashboardController as PatientDashboardController;
 use App\Http\Controllers\Patient\DoctorController as PatientDoctorController;
+use App\Http\Controllers\Patient\MedicalRecordController as PatientMedicalRecordController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -31,6 +33,9 @@ Route::middleware(['auth', 'role:doctor'])->prefix('doctor')->name('doctor.')->g
     Route::get('/appointments', [DoctorAppointmentController::class, 'index'])->name('appointments.index');
     Route::get('/appointments/{appointment}', [DoctorAppointmentController::class, 'show'])->name('appointments.show');
     Route::patch('/appointments/{appointment}/status', [DoctorAppointmentController::class, 'updateStatus'])->name('appointments.update-status');
+
+    Route::post('/appointments/{appointment}/notes', [DoctorMedicalRecordController::class, 'store'])->name('appointments.notes.store');
+    Route::patch('/appointments/{appointment}/notes', [DoctorMedicalRecordController::class, 'update'])->name('appointments.notes.update');
 });
 
 Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')->group(function () {
@@ -43,6 +48,9 @@ Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')
     Route::post('/appointments', [PatientAppointmentController::class, 'store'])->name('appointments.store');
     Route::get('/appointments/{appointment}', [PatientAppointmentController::class, 'show'])->name('appointments.show');
     Route::delete('/appointments/{appointment}', [PatientAppointmentController::class, 'destroy'])->name('appointments.destroy');
+
+    Route::get('/records', [PatientMedicalRecordController::class, 'index'])->name('records.index');
+    Route::get('/records/{record}', [PatientMedicalRecordController::class, 'show'])->name('records.show');
 });
 
 Route::middleware('auth')->group(function () {
