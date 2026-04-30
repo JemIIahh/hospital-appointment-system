@@ -10,7 +10,7 @@
 > When asked a question, answer in 1-3 sentences and stop; let the panel
 > follow up if they want more depth.
 >
-> Last updated: end of Phase 8 (booking engine).
+> Last updated: end of Phase 9 (consultation notes).
 
 ---
 
@@ -272,11 +272,37 @@ A: It's the academic context for this particular build. In a real production dep
 
 These will be filled in as each phase ships. Topics covered:
 
-### Phase 9 — Doctor consultation notes (medical records + prescription scaffolding)
-- Why are medical records tied to appointments rather than to patients directly?
-- How are diagnosis and notes validated?
-- Can a doctor edit a medical record after writing it?
-- TBD
+### Phase 9 — Doctor consultation notes (medical records)
+
+**Q: Why are medical records tied to appointments rather than to patients directly?**
+A: Each consultation produces one record, and the appointment is the natural anchor — it knows the date, the doctor, and the reason for visit. Tying the record to the appointment also encodes "this diagnosis came from a real visit on this date" without duplicating that metadata. Patients access their records by joining through their appointments via `whereHas('appointment', ...)` in the controller.
+
+**Q: Why is there one medical record per appointment instead of many?**
+A: A single visit produces a single consultation record. If a follow-up is needed, that's a new appointment with its own record. The schema enforces one-to-one via `appointments.hasOne(MedicalRecord)` and the foreign key on `medical_records.appointment_id`.
+
+**Q: How are diagnosis and notes validated?**
+A: `diagnosis` is required, max 5000 characters. `notes` is optional, max 10000 characters. Both are stored as TEXT columns. Limits prevent abuse and keep the table performant; 5000/10000 is generous for real-world consultation content.
+
+**Q: When can a doctor write or edit notes?**
+A: Only when the appointment status is `confirmed` or `completed`. The controller enforces this with `abort_if(! in_array($appointment->status, ['confirmed','completed']), 422)`. Pending status means the patient hasn't been seen yet; cancelled or no_show means no consultation took place.
+
+**Q: Can a doctor edit notes after marking the appointment completed?**
+A: Yes. Doctors sometimes realise errors or need to add follow-up details after the visit. Editing remains allowed as long as the appointment is `confirmed` or `completed`. The `updated_at` timestamp records when the change was made, providing an audit trail.
+
+**Q: How do you prevent a doctor from writing notes on another doctor's appointment?**
+A: `Doctor\MedicalRecordController` calls `abort_if($appointment->doctor_id !== Auth::user()->doctor->id, 403)` on every store/update. The route is also gated by `role:doctor` middleware. Two layers of authorisation: middleware confirms the user is a doctor; the abort confirms it's *their* appointment.
+
+**Q: How do you prevent a patient from viewing another patient's medical record?**
+A: `Patient\MedicalRecordController::show` calls `abort_if($record->appointment->patient_id !== Auth::user()->patient->id, 403)`. The `index` action filters by joining through appointment with `whereHas('appointment', fn($q) => $q->where('patient_id', $patientId))` — it's impossible to list records belonging to another patient.
+
+**Q: Why is the doctor's notes form embedded on the appointment show page instead of a dedicated URL?**
+A: Notes are inherently bound to one appointment — a separate URL would require additional navigation back-and-forth between "view appointment" and "write notes". Embedding keeps the doctor in the context of the patient's visit. The form POSTs to a separate endpoint (`/doctor/appointments/{id}/notes`) so the controller architecture stays clean.
+
+**Q: Why can the patient see medical records on a separate page (`/patient/records`) AND inline on the appointment detail?**
+A: Two access patterns. `/patient/records` is for "show me my history" — appropriate when a patient wants to look up a past diagnosis. The inline view on the appointment detail is for "what came of this specific visit" — natural when reviewing one appointment. Both query the same data, just framed differently.
+
+**Q: Why does Phase 9 not include prescriptions?**
+A: The locked phase plan separates them: Phase 9 is "consultation notes" (medical_records); Phase 11 is "Prescriptions + PDF generation" with DomPDF. Splitting keeps each phase scoped — Phase 11 is mostly about DomPDF rendering, which is its own domain of complexity.
 
 ### Phase 10 — Email notifications (SMTP via SendGrid)
 - Why SendGrid specifically?
