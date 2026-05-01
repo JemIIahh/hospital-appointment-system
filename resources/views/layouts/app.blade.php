@@ -10,81 +10,112 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-        <div class="container">
-            <a class="navbar-brand navbar-brand-app" href="{{ route('dashboard') }}">
-                <i class="bi bi-hospital me-2"></i>{{ config('app.name') }}
+    <nav class="app-nav">
+        <div class="container app-nav-inner">
+            <a class="app-nav-brand" href="{{ route('dashboard') }}">
+                <span class="app-nav-brand-icon"><i class="bi bi-hospital"></i></span>
+                <span class="app-nav-brand-name">{{ config('app.name') }}</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
-                <span class="navbar-toggler-icon"></span>
+
+            <button class="app-nav-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-label="Toggle navigation">
+                <i class="bi bi-list"></i>
             </button>
-            <div class="collapse navbar-collapse" id="mainNav">
-                <ul class="navbar-nav me-auto">
+
+            <div class="collapse navbar-collapse app-nav-collapse" id="mainNav">
+                <ul class="app-nav-links">
                     @auth
                         @if(Auth::user()->isAdmin())
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">Dashboard</a>
+                            <li>
+                                <a class="app-nav-link {{ request()->routeIs('admin.dashboard') ? 'is-active' : '' }}" href="{{ route('admin.dashboard') }}">
+                                    <i class="bi bi-house-door"></i><span>Home</span>
+                                </a>
                             </li>
                             @if(Route::has('admin.departments.index'))
-                                <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('admin.departments.*') ? 'active' : '' }}" href="{{ route('admin.departments.index') }}">Departments</a>
+                                <li>
+                                    <a class="app-nav-link {{ request()->routeIs('admin.departments.*') ? 'is-active' : '' }}" href="{{ route('admin.departments.index') }}">
+                                        <i class="bi bi-building"></i><span>Departments</span>
+                                    </a>
                                 </li>
                             @endif
                             @if(Route::has('admin.doctors.index'))
-                                <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('admin.doctors.*') ? 'active' : '' }}" href="{{ route('admin.doctors.index') }}">Doctors</a>
+                                <li>
+                                    <a class="app-nav-link {{ request()->routeIs('admin.doctors.*') ? 'is-active' : '' }}" href="{{ route('admin.doctors.index') }}">
+                                        <i class="bi bi-clipboard2-pulse"></i><span>Doctors</span>
+                                    </a>
                                 </li>
                             @endif
                             @if(Route::has('admin.reports.index'))
-                                <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}" href="{{ route('admin.reports.index') }}">Reports</a>
+                                <li>
+                                    <a class="app-nav-link {{ request()->routeIs('admin.reports.*') ? 'is-active' : '' }}" href="{{ route('admin.reports.index') }}">
+                                        <i class="bi bi-bar-chart"></i><span>Reports</span>
+                                    </a>
                                 </li>
                             @endif
                         @elseif(Auth::user()->isDoctor())
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('doctor.dashboard') ? 'active' : '' }}" href="{{ route('doctor.dashboard') }}">Dashboard</a>
+                            <li>
+                                <a class="app-nav-link {{ request()->routeIs('doctor.dashboard') ? 'is-active' : '' }}" href="{{ route('doctor.dashboard') }}">
+                                    <i class="bi bi-house-door"></i><span>Home</span>
+                                </a>
                             </li>
                             @if(Route::has('doctor.appointments.index'))
-                                <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('doctor.appointments.*') ? 'active' : '' }}" href="{{ route('doctor.appointments.index') }}">Appointments</a>
+                                <li>
+                                    <a class="app-nav-link {{ request()->routeIs('doctor.appointments.*') ? 'is-active' : '' }}" href="{{ route('doctor.appointments.index') }}">
+                                        <i class="bi bi-calendar-check"></i><span>Appointments</span>
+                                    </a>
                                 </li>
                             @endif
                         @elseif(Auth::user()->isPatient())
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('patient.dashboard') ? 'active' : '' }}" href="{{ route('patient.dashboard') }}">Dashboard</a>
+                            <li>
+                                <a class="app-nav-link {{ request()->routeIs('patient.dashboard') ? 'is-active' : '' }}" href="{{ route('patient.dashboard') }}">
+                                    <i class="bi bi-house-door"></i><span>Home</span>
+                                </a>
                             </li>
                             @if(Route::has('patient.doctors.index'))
-                                <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('patient.doctors.*') ? 'active' : '' }}" href="{{ route('patient.doctors.index') }}">Browse Doctors</a>
+                                <li>
+                                    <a class="app-nav-link {{ request()->routeIs('patient.doctors.*') ? 'is-active' : '' }}" href="{{ route('patient.doctors.index') }}">
+                                        <i class="bi bi-search-heart"></i><span>Browse Doctors</span>
+                                    </a>
                                 </li>
                             @endif
                             @if(Route::has('patient.appointments.index'))
-                                <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('patient.appointments.*') ? 'active' : '' }}" href="{{ route('patient.appointments.index') }}">My Appointments</a>
+                                <li>
+                                    <a class="app-nav-link {{ request()->routeIs('patient.appointments.*') ? 'is-active' : '' }}" href="{{ route('patient.appointments.index') }}">
+                                        <i class="bi bi-calendar-check"></i><span>My Appointments</span>
+                                    </a>
                                 </li>
                             @endif
                             @if(Route::has('patient.records.index'))
-                                <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('patient.records.*') ? 'active' : '' }}" href="{{ route('patient.records.index') }}">My Records</a>
+                                <li>
+                                    <a class="app-nav-link {{ request()->routeIs('patient.records.*') ? 'is-active' : '' }}" href="{{ route('patient.records.index') }}">
+                                        <i class="bi bi-file-medical"></i><span>Record</span>
+                                    </a>
                                 </li>
                             @endif
                             @if(Route::has('patient.prescriptions.index'))
-                                <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('patient.prescriptions.*') ? 'active' : '' }}" href="{{ route('patient.prescriptions.index') }}">Prescriptions</a>
+                                <li>
+                                    <a class="app-nav-link {{ request()->routeIs('patient.prescriptions.*') ? 'is-active' : '' }}" href="{{ route('patient.prescriptions.index') }}">
+                                        <i class="bi bi-capsule"></i><span>Prescriptions</span>
+                                    </a>
                                 </li>
                             @endif
                         @endif
                     @endauth
                 </ul>
-                <ul class="navbar-nav">
+
+                <ul class="app-nav-user">
                     @auth
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-person-circle me-1"></i>{{ Auth::user()->name }}
-                            </a>
+                        <li class="dropdown">
+                            <button class="app-nav-userbtn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span class="app-nav-avatar">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
+                                <span class="app-nav-userinfo">
+                                    <span class="app-nav-username">{{ Auth::user()->name }}</span>
+                                    <span class="app-nav-userrole">{{ ucfirst(Auth::user()->role) }}</span>
+                                </span>
+                                <i class="bi bi-chevron-down app-nav-chev"></i>
+                            </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                <li class="dropdown-header text-muted small">
-                                    Logged in as <strong>{{ Auth::user()->role }}</strong>
+                                <li class="dropdown-header small text-muted">
+                                    Signed in as <strong>{{ Auth::user()->email }}</strong>
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{{ route('profile.edit') }}"><i class="bi bi-person me-2"></i>Profile</a></li>
@@ -92,7 +123,7 @@
                                 <li>
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
-                                        <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right me-2"></i>Log Out</button>
+                                        <button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-right me-2"></i>Log Out</button>
                                     </form>
                                 </li>
                             </ul>

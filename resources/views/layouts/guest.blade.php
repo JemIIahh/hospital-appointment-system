@@ -10,47 +10,25 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="auth-page">
-    <div class="auth-shell">
-        {{-- Branded aside (hidden on mobile) --}}
-        <aside class="auth-aside">
-            <div class="auth-aside-content">
-                <a href="/" class="auth-aside-brand">
-                    <i class="bi bi-hospital"></i>
-                    <span>{{ config('app.name') }}</span>
-                </a>
+    <div class="auth-bg">
+        <div class="auth-bg-blob auth-bg-blob-1"></div>
+        <div class="auth-bg-blob auth-bg-blob-2"></div>
+        <div class="auth-bg-grid"></div>
+    </div>
 
-                <h2 class="auth-aside-headline">
-                    Healthcare,<br>without the queue.
-                </h2>
-                <p class="auth-aside-sub">
-                    Book a 30-minute consultation with one of our {{ \App\Models\Doctor::count() }} specialists.
-                    Real-time availability, instant confirmation, your records always accessible.
-                </p>
+    <div class="auth-stack">
+        <a href="/" class="auth-brand-large">
+            <span class="auth-brand-icon"><i class="bi bi-hospital"></i></span>
+            <span class="auth-brand-name">{{ config('app.name') }}</span>
+        </a>
 
-                <ul class="auth-aside-features">
-                    <li><i class="bi bi-check-lg"></i> Specialists across {{ \App\Models\Department::count() }} departments</li>
-                    <li><i class="bi bi-check-lg"></i> Real-time slot availability</li>
-                    <li><i class="bi bi-check-lg"></i> Diagnoses &amp; prescriptions in your account</li>
-                    <li><i class="bi bi-check-lg"></i> Cancel anytime before your visit</li>
-                </ul>
-            </div>
-        </aside>
+        <div class="auth-card-modern">
+            {{ $slot }}
+        </div>
 
-        {{-- Form side --}}
-        <main class="auth-main">
-            <a href="/" class="auth-back">
-                <i class="bi bi-arrow-left"></i> Back to home
-            </a>
-
-            <div class="auth-form-wrap">
-                <a href="/" class="auth-mobile-brand">
-                    <i class="bi bi-hospital"></i>
-                    {{ config('app.name') }}
-                </a>
-
-                {{ $slot }}
-            </div>
-        </main>
+        <a href="/" class="auth-back-link">
+            <i class="bi bi-arrow-left"></i> Back to home
+        </a>
     </div>
 </body>
 </html>
