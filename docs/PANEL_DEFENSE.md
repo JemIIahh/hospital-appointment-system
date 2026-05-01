@@ -10,7 +10,7 @@
 > When asked a question, answer in 1-3 sentences and stop; let the panel
 > follow up if they want more depth.
 >
-> Last updated: end of Phase 12 (reports dashboard).
+> Last updated: **end of Phase 14 (project complete)**.
 
 ---
 
@@ -412,10 +412,33 @@ A: Stripe Checkout (the hosted payment page) for simplicity — patient clicks "
 A: Two reasonable patterns: (1) require payment up-front to convert pending → confirmed; (2) allow booking on credit and reconcile payment after the visit. For an outpatient hospital, pattern (2) matches reality better — patients sometimes pay at reception. Either way, Stripe Checkout would be the integration surface and the existing `payments.status` enum (pending/paid/failed/refunded) covers the lifecycle.
 
 ### Phase 14 — Polish, testing, deployment
-- What automated tests cover the booking engine?
-- How would this be deployed to production (server, env, secrets)?
-- What's the rollback plan if a deployment breaks?
-- TBD
+
+**Q: What automated tests cover the project?**
+A: 49 PHPUnit feature tests across 8 test classes, totalling 130 assertions, running in 3.4 seconds. They cover: booking conflict prevention (4 tests), role-based authorization (6 tests), per-record authorization on appointments/records/prescriptions (5 tests), full appointment lifecycle pending→confirmed→completed (3 tests), medical-record status gating (4 tests), prescription PDF download authorization (3 tests), plus the existing Breeze auth tests. Run with `php artisan test`.
+
+**Q: Why feature tests and not unit tests?**
+A: Feature tests exercise the route + controller + model + view pipeline end-to-end, which is what panel members care about — the actual flows, not isolated method behaviour. Unit tests would be appropriate for a pure-domain library; for a Laravel CRUD app, feature tests give the highest panel-relevant coverage per hour invested. The test suite verifies HTTP responses, redirects, session flashes, database state, and authorization — all the things a "did you test it?" question is asking about.
+
+**Q: Why does the test suite use SQLite instead of MySQL?**
+A: Speed. PHPUnit creates an in-memory SQLite database per test class via the `RefreshDatabase` trait — every test starts with a freshly migrated empty database in milliseconds. Using MySQL would require either a dedicated test database (with cleanup overhead) or transactional rollbacks (which interfere with the booking-conflict test's `lockForUpdate` behaviour). SQLite supports everything our schema uses (foreign keys, ENUM via CHECK constraints, transactions). The trade is that locking semantics differ from MySQL — but the test verifies the *application-level* conflict detection, which is the same code path on both databases.
+
+**Q: How is the booking conflict actually tested?**
+A: `BookingConflictTest` posts two booking requests for the same slot from two different patients. The first succeeds; the second's controller hits the `lockForUpdate()` SELECT, sees the existing row, throws `RuntimeException`, and the controller redirects with a session error. The test asserts only one row exists in the `appointments` table. A separate test verifies the cancellation flow re-frees the slot — first patient cancels, second patient successfully books the same slot, both rows now coexist in the database (one cancelled, one pending).
+
+**Q: Why no end-to-end browser tests (Laravel Dusk / Playwright)?**
+A: Dusk requires a real browser instance and is significantly slower (~30s per test instead of milliseconds). Feature tests cover all the controller logic and authorization paths; the Blade rendering itself was verified by hand during build. The main thing a browser test would add is JavaScript behaviour (Alpine.js prescription form, Chart.js rendering) — both are covered by manual verification. Adding Dusk would be a Phase 14+ enhancement, not a current requirement.
+
+**Q: Is deployment documented?**
+A: Yes — see `docs/DEPLOYMENT.md`. It covers server requirements, the env-variable diff for production (APP_DEBUG=false, real SendGrid credentials, etc.), an nginx config block, Let's Encrypt setup, supervisord queue worker config, backup strategy, and the deploy-update procedure. Documentation only — the project is not actually deployed for the academic submission.
+
+**Q: Why is deployment documented but not done?**
+A: An academic submission is graded on the codebase and the demonstration, not on a live URL. Deploying introduces costs (a VPS, a domain, an SSL cert) and ongoing maintenance that aren't part of the academic deliverable. Documenting deployment shows you understand what production needs without creating an obligation to keep something running.
+
+**Q: What's the rollback plan if a deployment breaks?**
+A: For first deployments, `php artisan migrate:rollback` reverts the latest migration batch. For subsequent deploys, `git checkout <previous-tag>` and re-run the deploy step (`composer install`, `npm run build`, `migrate --force`, cache regeneration) — assuming new deploys are tagged, which is in the deployment doc as a recommended practice. Database backups (also in the doc, Section 8) cover the case where a migration corrupts data.
+
+**Q: How was AI used during the build, and is that disclosed?**
+A: I worked alongside Anthropic's Claude (Claude Code interface) for code generation and architectural advice across all 14 phases. Every commit includes a `Co-Authored-By: Claude` trailer in its message, so the git log is transparent about the collaboration. Architectural decisions (the locked stack, the schema, the phase plan, the trim of Phase 13) and verification of every checkpoint were mine. AI sped up implementation; it did not replace the design or evaluation work.
 
 ---
 
