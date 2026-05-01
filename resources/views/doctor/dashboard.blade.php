@@ -1,11 +1,14 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
-                <h2 class="h4 mb-0">Doctor Dashboard</h2>
-                <p class="text-muted small mb-0">Today's schedule and pending confirmations</p>
+                <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing: .06em;">Doctor</p>
+                <h2 class="h3 mb-0">Good {{ now()->hour < 12 ? 'morning' : (now()->hour < 18 ? 'afternoon' : 'evening') }}, Dr. {{ Str::before(Auth::user()->name, ' ') }} 👋</h2>
+                <p class="text-muted mb-0">Here's what's on your plate today.</p>
             </div>
-            <span class="badge text-bg-success">Dr. {{ Auth::user()->name }}</span>
+            <a href="{{ route('doctor.appointments.index') }}" class="btn btn-primary">
+                <i class="bi bi-calendar-check me-1"></i> All appointments
+            </a>
         </div>
     </x-slot>
 
@@ -18,7 +21,7 @@
         {{-- Stat cards --}}
         <div class="row g-3 mb-4">
             <div class="col-6 col-md-3">
-                <div class="card card-stat" style="background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);">
+                <div class="card card-stat" style="background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);">
                     <div class="card-body d-flex align-items-center justify-content-between">
                         <div>
                             <div class="stat-label">Today</div>
@@ -30,7 +33,7 @@
             </div>
             <div class="col-6 col-md-3">
                 <a href="{{ route('doctor.appointments.index') }}?status=pending" class="text-decoration-none">
-                    <div class="card card-stat" style="background: linear-gradient(135deg, #d97706 0%, #b45309 100%);">
+                    <div class="card card-stat" style="background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);">
                         <div class="card-body d-flex align-items-center justify-content-between">
                             <div>
                                 <div class="stat-label">Pending</div>
@@ -42,7 +45,7 @@
                 </a>
             </div>
             <div class="col-6 col-md-3">
-                <div class="card card-stat" style="background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);">
+                <div class="card card-stat" style="background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);">
                     <div class="card-body d-flex align-items-center justify-content-between">
                         <div>
                             <div class="stat-label">This Week</div>
@@ -53,7 +56,7 @@
                 </div>
             </div>
             <div class="col-6 col-md-3">
-                <div class="card card-stat" style="background: linear-gradient(135deg, #059669 0%, #047857 100%);">
+                <div class="card card-stat" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
                     <div class="card-body d-flex align-items-center justify-content-between">
                         <div>
                             <div class="stat-label">Completed</div>
@@ -68,13 +71,13 @@
         {{-- Today's schedule --}}
         <div class="card">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <strong><i class="bi bi-calendar-day me-2"></i>Today's Schedule &mdash; {{ today()->format('l, F j') }}</strong>
-                <a href="{{ route('doctor.appointments.index') }}" class="small">View all appointments</a>
+                <strong><i class="bi bi-calendar-day me-2 text-primary"></i>Today's schedule &mdash; {{ today()->format('l, F j') }}</strong>
+                <a href="{{ route('doctor.appointments.index') }}" class="small">View all <i class="bi bi-arrow-right"></i></a>
             </div>
             @if($todayAppointments->isEmpty())
                 <div class="empty-state">
                     <i class="bi bi-calendar-x"></i>
-                    <p class="text-muted mb-0">No appointments scheduled for today.</p>
+                    <p class="text-muted mb-0">No appointments scheduled for today. Enjoy your day.</p>
                 </div>
             @else
                 <div class="table-responsive">
@@ -92,10 +95,18 @@
                             @foreach($todayAppointments as $appt)
                                 @php
                                     $colors = ['pending'=>'warning','confirmed'=>'info','completed'=>'success','no_show'=>'danger','cancelled'=>'secondary'];
+                                    $patientInitial = strtoupper(substr($appt->patient->user->name, 0, 1));
                                 @endphp
                                 <tr>
-                                    <td class="fw-semibold">{{ \Carbon\Carbon::parse($appt->appointment_time)->format('g:i A') }}</td>
-                                    <td>{{ $appt->patient->user->name }}</td>
+                                    <td class="fw-semibold">
+                                        <i class="bi bi-clock me-1 text-muted"></i>{{ \Carbon\Carbon::parse($appt->appointment_time)->format('g:i A') }}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="profile-avatar" style="width:2rem;height:2rem;font-size:.85rem;">{{ $patientInitial }}</span>
+                                            <span class="fw-semibold">{{ $appt->patient->user->name }}</span>
+                                        </div>
+                                    </td>
                                     <td class="text-muted small">{{ Str::limit($appt->reason, 60) }}</td>
                                     <td>
                                         <span class="badge text-bg-{{ $colors[$appt->status] ?? 'secondary' }}">
