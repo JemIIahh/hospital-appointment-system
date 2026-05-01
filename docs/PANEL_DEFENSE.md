@@ -400,11 +400,16 @@ A: `AppointmentSeeder` generates ~70 appointments with statuses weighted by date
 **Q: How is privacy handled in the reports?**
 A: Admins see only aggregates (counts), not patient identities. Top-doctors chart shows doctor names because those are public-facing professional credentials. No medical content (diagnoses, prescriptions, reasons) appears anywhere in the reports. Per-patient data lives only in the patient/doctor flows, gated by per-record `abort_if` checks.
 
-### Phase 13 — Stripe test-mode payments
-- Why Stripe test mode for an academic project?
-- How is the payment flow integrated with the booking lifecycle?
-- What happens if the patient closes the browser mid-payment?
-- TBD
+### Phase 13 — Stripe payments (intentionally skipped)
+
+**Q: There's a `payments` table in the schema but no payment UI. Why?**
+A: The schema was designed for the full hospital domain — patients owe consultation fees and a payment system needs a record of the transaction. Phase 13 was originally Stripe test-mode integration, but that was scoped out of the academic submission as a deliberate trim. The table persists in the design so the schema remains complete and FK-correct, and the academic project demonstrates the schema design without committing to a payment integration. In a real deployment, a Phase 13 follow-up would wire Stripe Checkout to populate this table.
+
+**Q: How would you have built it if you weren't scoping it out?**
+A: Stripe Checkout (the hosted payment page) for simplicity — patient clicks "Pay now" on their appointment, redirected to Stripe, returns with a `session_id`. A webhook handler on `/stripe/webhook` listens for `checkout.session.completed` events and writes a row to `payments` with status='paid'. Idempotency comes from Stripe's `payment_intent.id` stored as `transaction_reference`.
+
+**Q: How would the booking flow integrate with payments?**
+A: Two reasonable patterns: (1) require payment up-front to convert pending → confirmed; (2) allow booking on credit and reconcile payment after the visit. For an outpatient hospital, pattern (2) matches reality better — patients sometimes pay at reception. Either way, Stripe Checkout would be the integration surface and the existing `payments.status` enum (pending/paid/failed/refunded) covers the lifecycle.
 
 ### Phase 14 — Polish, testing, deployment
 - What automated tests cover the booking engine?
