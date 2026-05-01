@@ -10,7 +10,7 @@
 > When asked a question, answer in 1-3 sentences and stop; let the panel
 > follow up if they want more depth.
 >
-> Last updated: end of Phase 10 (email notifications).
+> Last updated: end of Phase 11 (prescriptions + PDF generation).
 
 ---
 
@@ -331,10 +331,39 @@ A: `noreply@hospital.test` — `.test` is an IANA-reserved TLD that can never re
 A: Verification email goes out (Laravel's built-in `Registered` event triggers it), but we don't gate dashboard access behind verification yet. Doing so during the build phase makes registration testing painful (every test patient would need their inbox dug for a link). Phase 14 polish enables enforcement once real SMTP is configured.
 
 ### Phase 11 — Prescriptions + DomPDF
-- Why generate PDFs server-side instead of using browser print?
-- How is the prescription form structured (one row per medication)?
-- How are prescription PDFs served to the patient?
-- TBD
+
+**Q: Why DomPDF specifically?**
+A: It's pure-PHP (no native binaries or external services), runs anywhere Laravel runs, and is the most-installed Laravel PDF package. Per the locked stack. Alternatives like wkhtmltopdf require an external binary; mPDF is similar but less popular in Laravel circles. DomPDF's CSS support is limited (no flexbox, no grid) but tables work, which is enough for a prescription template.
+
+**Q: Why generate PDFs server-side instead of using browser print?**
+A: Browser print is unreliable — different browsers paginate and style differently, and the user has no control over headers/footers in the print dialog. Server-rendered PDFs are deterministic (same input → same byte output), styleable with full CSS control, and downloadable via a single URL. Patients can also share or attach the PDF to other systems.
+
+**Q: How is the prescription form structured?**
+A: Two parts: a `general_instructions` textarea (free-form) and a dynamic medication-rows table managed by Alpine.js. Each row has medication name, dosage, frequency, duration. Add/remove buttons mutate an Alpine `items` array; Blade's `<template x-for>` renders the rows reactively. On submit, Laravel validates `items.*.medication_name`, `items.*.dosage`, etc. — the wildcard reaches into each indexed item.
+
+**Q: Why "delete + recreate" instead of diffing on update?**
+A: Diffing existing items against new form values requires identifying which items are kept, which are new, which are deleted — error-prone and complex. "Delete then create" inside a transaction is atomic, simpler, and the FK cascade on `prescription_items.prescription_id` makes it efficient. The cost is a few extra DB writes; acceptable since prescriptions are rarely edited and never have hundreds of items.
+
+**Q: How is the dynamic add/remove medications form authored?**
+A: Alpine.js: `<form x-data="{ items: [...] }">` initialises the array; `<template x-for="(item, idx) in items">` renders each row; `<input :name="`items[${idx}][medication_name]`">` produces the indexed POST body Laravel expects; `@click="items.push(...)"` and `items.splice(idx, 1)` add/remove rows. On edit, the array is pre-seeded from `$prescription->items` JSON-encoded into the `x-data` directive.
+
+**Q: How is one-prescription-per-appointment enforced?**
+A: Schema-level: `prescriptions.appointment_id` is a foreign key with no unique constraint, but the `Appointment::hasOne(Prescription)` Eloquent relation expresses the intended cardinality. Application-level: `Doctor\PrescriptionController::store` checks `if ($appointment->prescription)` and returns a friendly error if one already exists, directing the doctor to use Edit instead.
+
+**Q: Why does Phase 11 separate medications into `prescription_items` instead of storing them as a JSON column?**
+A: The locked schema requires a separate `prescription_items` table (per the 3NF design from Phase 3). Each medication is a fact about itself — its own dosage, frequency, duration — and shouldn't be encoded as a JSON blob within the prescription row. Querying "all patients on Amoxicillin in the last 90 days" is a `JOIN` away with the relational design, but a full table scan with JSON.
+
+**Q: How is PDF download authorised?**
+A: Both the patient and doctor controllers have a separate `downloadPdf` method that calls `abort_if($prescription->appointment->patient_id !== Auth::user()->patient->id, 403)` (or the doctor equivalent). The route is gated by `role:patient` or `role:doctor` middleware. So a doctor can't download another doctor's prescription PDFs even if they manipulate the URL.
+
+**Q: What's in the rendered PDF?**
+A: Hospital header (clinic name, "Specialist medical care" tagline), prescription number + issue date in the top-right; patient info box (name, DOB, gender, blood group, visit date+time); prescribing doctor block (name, license, department, specialization); optional general-instructions banner styled like a warning callout; medications table with numbered rows; doctor signature line bottom-right; legal-notice block; footer with timestamp and prescription number on every page.
+
+**Q: How big is the PDF and is that a problem?**
+A: ~1.2 MB. Most of that is DomPDF embedding the DejaVu Sans font (used for Unicode reliability across mail clients). For a single-prescription download, that's fine. If we generated thousands per day in a queue, we could subset the font or switch to a system font. Not a current concern.
+
+**Q: Could a malicious user generate prescription PDFs for arbitrary patients?**
+A: No. Three layers prevent it: (1) the route is behind `role:patient` or `role:doctor` middleware; (2) the controller `abort_if` matches the prescription's owning appointment to the authenticated user; (3) Laravel route-model binding ensures the URL `{prescription}` parameter resolves to a real DB row, not an arbitrary string. All three would have to fail simultaneously.
 
 ### Phase 12 — Reports dashboard with Chart.js
 - Why Chart.js over server-rendered charts?

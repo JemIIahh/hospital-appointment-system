@@ -111,17 +111,20 @@
                 </div>
             </div>
 
-            <div class="card mt-3">
-                <div class="card-body">
-                    <h6 class="mb-2">Prescription</h6>
-                    <button class="btn btn-outline-secondary w-100" disabled>
-                        <i class="bi bi-prescription2 me-1"></i> Add Prescription
-                    </button>
-                    <p class="text-muted small mt-2 mb-0">
-                        Prescriptions and PDF generation arrive in Phase 11.
-                    </p>
+            @php $appointment->load('prescription.items'); $rxSidebar = $appointment->prescription; @endphp
+            @if($rxSidebar)
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h6 class="mb-2">Prescription</h6>
+                        <p class="text-muted small mb-2">
+                            {{ $rxSidebar->items->count() }} {{ Str::plural('medication', $rxSidebar->items->count()) }} prescribed.
+                        </p>
+                        <a href="{{ route('doctor.prescriptions.pdf', $rxSidebar) }}" class="btn btn-outline-primary w-100 btn-sm">
+                            <i class="bi bi-download me-1"></i> Download PDF
+                        </a>
+                    </div>
                 </div>
-            </div>
+            @endif
         </div>
     </div>
 
@@ -219,6 +222,95 @@
                         <i class="bi bi-save me-1"></i> Save Consultation Notes
                     </button>
                 </form>
+            @endif
+        </div>
+    </div>
+
+    {{-- Prescription section --}}
+    @php
+        $rxWritable = in_array($appointment->status, ['confirmed', 'completed'], true);
+        $rx = $appointment->prescription;
+        $existingItems = $rx
+            ? $rx->items->map(fn ($i) => $i->only(['medication_name','dosage','frequency','duration']))->values()->toArray()
+            : [['medication_name'=>'','dosage'=>'','frequency'=>'','duration'=>'']];
+    @endphp
+
+    <div class="card mt-3">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <strong><i class="bi bi-prescription2 me-2"></i>Prescription</strong>
+            @if($rx && $rxWritable)
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        x-data x-on:click="$dispatch('toggle-edit-rx')">
+                    <i class="bi bi-pencil"></i> Edit
+                </button>
+            @endif
+        </div>
+        <div class="card-body" x-data="{ editing: {{ $rx ? 'false' : 'true' }} }"
+             x-on:toggle-edit-rx.window="editing = !editing">
+
+            @if(! $rxWritable && ! $rx)
+                <p class="text-muted mb-0">
+                    Prescriptions can only be added for confirmed or completed appointments.
+                </p>
+
+            @elseif($rx)
+                {{-- Read view --}}
+                <div x-show="!editing">
+                    @if($rx->general_instructions)
+                        <h6 class="text-uppercase small text-muted">General Instructions</h6>
+                        <p style="white-space: pre-wrap;">{{ $rx->general_instructions }}</p>
+                    @endif
+
+                    <h6 class="text-uppercase small text-muted">Medications</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Medication</th>
+                                    <th>Dosage</th>
+                                    <th>Frequency</th>
+                                    <th>Duration</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($rx->items as $item)
+                                    <tr>
+                                        <td><strong>{{ $item->medication_name }}</strong></td>
+                                        <td>{{ $item->dosage }}</td>
+                                        <td>{{ $item->frequency }}</td>
+                                        <td>{{ $item->duration }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <p class="text-muted small mb-0">Last updated {{ $rx->updated_at->diffForHumans() }}</p>
+                        <a href="{{ route('doctor.prescriptions.pdf', $rx) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-download me-1"></i> Download PDF
+                        </a>
+                    </div>
+                </div>
+
+                {{-- Edit form --}}
+                <div x-show="editing" x-cloak>
+                    @include('doctor.appointments._prescription_form', [
+                        'method'  => 'PATCH',
+                        'action'  => route('doctor.appointments.prescription.update', $appointment),
+                        'items'   => $existingItems,
+                        'general' => $rx->general_instructions,
+                    ])
+                </div>
+
+            @else
+                {{-- Create form --}}
+                @include('doctor.appointments._prescription_form', [
+                    'method'  => 'POST',
+                    'action'  => route('doctor.appointments.prescription.store', $appointment),
+                    'items'   => $existingItems,
+                    'general' => null,
+                ])
             @endif
         </div>
     </div>

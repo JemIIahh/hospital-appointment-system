@@ -6,10 +6,12 @@ use App\Http\Controllers\Admin\DoctorController as AdminDoctorController;
 use App\Http\Controllers\Doctor\AppointmentController as DoctorAppointmentController;
 use App\Http\Controllers\Doctor\DashboardController as DoctorDashboardController;
 use App\Http\Controllers\Doctor\MedicalRecordController as DoctorMedicalRecordController;
+use App\Http\Controllers\Doctor\PrescriptionController as DoctorPrescriptionController;
 use App\Http\Controllers\Patient\AppointmentController as PatientAppointmentController;
 use App\Http\Controllers\Patient\DashboardController as PatientDashboardController;
 use App\Http\Controllers\Patient\DoctorController as PatientDoctorController;
 use App\Http\Controllers\Patient\MedicalRecordController as PatientMedicalRecordController;
+use App\Http\Controllers\Patient\PrescriptionController as PatientPrescriptionController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -36,6 +38,10 @@ Route::middleware(['auth', 'role:doctor'])->prefix('doctor')->name('doctor.')->g
 
     Route::post('/appointments/{appointment}/notes', [DoctorMedicalRecordController::class, 'store'])->name('appointments.notes.store');
     Route::patch('/appointments/{appointment}/notes', [DoctorMedicalRecordController::class, 'update'])->name('appointments.notes.update');
+
+    Route::post('/appointments/{appointment}/prescription', [DoctorPrescriptionController::class, 'store'])->name('appointments.prescription.store');
+    Route::patch('/appointments/{appointment}/prescription', [DoctorPrescriptionController::class, 'update'])->name('appointments.prescription.update');
+    Route::get('/prescriptions/{prescription}/pdf', [DoctorPrescriptionController::class, 'downloadPdf'])->name('prescriptions.pdf');
 });
 
 Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')->group(function () {
@@ -51,6 +57,10 @@ Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')
 
     Route::get('/records', [PatientMedicalRecordController::class, 'index'])->name('records.index');
     Route::get('/records/{record}', [PatientMedicalRecordController::class, 'show'])->name('records.show');
+
+    Route::get('/prescriptions', [PatientPrescriptionController::class, 'index'])->name('prescriptions.index');
+    Route::get('/prescriptions/{prescription}', [PatientPrescriptionController::class, 'show'])->name('prescriptions.show');
+    Route::get('/prescriptions/{prescription}/pdf', [PatientPrescriptionController::class, 'downloadPdf'])->name('prescriptions.pdf');
 });
 
 Route::middleware('auth')->group(function () {

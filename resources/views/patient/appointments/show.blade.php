@@ -62,7 +62,11 @@
                 </div>
             </div>
 
-            @php $appointment->load('medicalRecord'); $record = $appointment->medicalRecord; @endphp
+            @php
+                $appointment->load('medicalRecord', 'prescription.items');
+                $record = $appointment->medicalRecord;
+                $rx = $appointment->prescription;
+            @endphp
             @if($record)
                 <div class="card mt-3">
                     <div class="card-header bg-white">
@@ -76,6 +80,47 @@
                             <h6 class="text-uppercase small text-muted mt-3">Notes from Dr. {{ $appointment->doctor->user->name }}</h6>
                             <p class="mb-0" style="white-space: pre-wrap;">{{ $record->notes }}</p>
                         @endif
+                    </div>
+                </div>
+            @endif
+
+            @if($rx)
+                <div class="card mt-3">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <strong><i class="bi bi-prescription2 me-2"></i>Prescription</strong>
+                        <a href="{{ route('patient.prescriptions.pdf', $rx) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-download me-1"></i> PDF
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        @if($rx->general_instructions)
+                            <h6 class="text-uppercase small text-muted">Instructions</h6>
+                            <p style="white-space: pre-wrap;">{{ $rx->general_instructions }}</p>
+                        @endif
+
+                        <h6 class="text-uppercase small text-muted">Medications ({{ $rx->items->count() }})</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Medication</th>
+                                        <th>Dosage</th>
+                                        <th>Frequency</th>
+                                        <th>Duration</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($rx->items as $item)
+                                        <tr>
+                                            <td><strong>{{ $item->medication_name }}</strong></td>
+                                            <td>{{ $item->dosage }}</td>
+                                            <td>{{ $item->frequency }}</td>
+                                            <td>{{ $item->duration }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             @endif

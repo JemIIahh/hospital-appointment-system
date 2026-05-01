@@ -63,6 +63,11 @@
                                     <a class="nav-link {{ request()->routeIs('patient.records.*') ? 'active' : '' }}" href="{{ route('patient.records.index') }}">My Records</a>
                                 </li>
                             @endif
+                            @if(Route::has('patient.prescriptions.index'))
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->routeIs('patient.prescriptions.*') ? 'active' : '' }}" href="{{ route('patient.prescriptions.index') }}">Prescriptions</a>
+                                </li>
+                            @endif
                         @endif
                     @endauth
                 </ul>
