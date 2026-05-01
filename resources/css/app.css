@@ -133,10 +133,10 @@ header.page-header {
 .app-nav-inner {
     display: flex;
     align-items: center;
-    gap: 1.25rem;
-    padding-top: 0.65rem;
-    padding-bottom: 0.65rem;
-    min-height: 64px;
+    gap: 1rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    min-height: 56px;
 }
 .app-nav-brand {
     display: inline-flex;
@@ -167,7 +167,9 @@ header.page-header {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 14rem;
+}
+@media (max-width: 575px) {
+    .app-nav-brand-name { max-width: 12rem; }
 }
 
 .app-nav-toggle {
@@ -329,14 +331,23 @@ header.page-header {
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-lg);
-    padding: 0.5rem;
+    padding: 0.4rem;
+    min-width: 14rem;
+    font-size: 0.875rem;
     animation: hospital-fade-in-up var(--transition-fast) ease-out;
 }
+.dropdown-header {
+    font-size: 0.75rem !important;
+    padding: 0.4rem 0.65rem 0.5rem;
+}
+.dropdown-divider { margin: 0.25rem 0; }
 .dropdown-item {
-    padding: 0.5rem 0.75rem;
+    padding: 0.45rem 0.65rem;
     border-radius: var(--radius-sm);
+    font-size: 0.875rem;
     transition: background var(--transition-fast), color var(--transition-fast);
 }
+.dropdown-item i { font-size: 0.95rem; }
 .dropdown-item:hover, .dropdown-item:focus {
     background-color: var(--color-primary-soft);
     color: var(--color-primary-dark);
@@ -352,8 +363,8 @@ header.page-header {
     border-bottom: 1px solid var(--color-border);
 }
 header.page-header .container {
-    padding-top: 1.4rem !important;
-    padding-bottom: 1.4rem !important;
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
 }
 header.page-header h2 {
     font-weight: 700;
@@ -383,7 +394,7 @@ header.page-header h2 {
     font-weight: 500;
 }
 
-.card-body { padding: 1.25rem; }
+.card-body { padding: 1rem 1.15rem; }
 
 /* Stat cards */
 .card-stat {
@@ -405,22 +416,23 @@ header.page-header h2 {
     pointer-events: none;
 }
 .card-stat .stat-icon {
-    font-size: 2.25rem;
+    font-size: 1.85rem;
     opacity: 0.55;
     line-height: 1;
 }
 .card-stat .stat-label {
     text-transform: uppercase;
     letter-spacing: 0.7px;
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 700;
     opacity: 0.9;
 }
 .card-stat .stat-number {
-    font-size: 2rem;
+    font-size: 1.65rem;
     font-weight: 700;
     line-height: 1.1;
     letter-spacing: -0.02em;
+    margin-top: 0.15rem;
 }
 
 /* ============================================================
