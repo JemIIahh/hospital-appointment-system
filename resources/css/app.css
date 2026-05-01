@@ -767,6 +767,107 @@ header.page-header h2 {
 }
 
 /* ============================================================
+   Profile snapshot (patient dashboard)
+   ============================================================ */
+.profile-snapshot {
+    background: linear-gradient(135deg, #ffffff 0%, #fafbff 100%);
+    border-color: var(--color-border);
+}
+.profile-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+    color: white;
+    font-weight: 700;
+    font-size: 1.35rem;
+    flex-shrink: 0;
+    box-shadow: 0 6px 18px -4px rgba(79, 70, 229, 0.4);
+}
+.profile-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: var(--radius-sm);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border-soft);
+}
+.profile-stat i {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.5rem;
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+/* Appointment date "calendar tile" */
+.appt-date {
+    flex-shrink: 0;
+    width: 3rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    text-align: center;
+    background: var(--color-surface);
+}
+.appt-date .appt-month {
+    display: block;
+    background: var(--color-primary);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.15rem 0;
+}
+.appt-date .appt-day {
+    display: block;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--color-text);
+    padding: 0.2rem 0;
+    line-height: 1;
+}
+
+.min-w-0 { min-width: 0; }
+
+/* Doctor avatar tile (browse doctors) */
+.doctor-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    color: white;
+    font-weight: 700;
+    font-size: 1.05rem;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.15);
+}
+.doctor-card { transition: border-color var(--transition-fast), transform var(--transition-base), box-shadow var(--transition-base); }
+.doctor-card:hover { border-color: var(--color-primary-light); transform: translateY(-2px); }
+
+/* Larger date tile for appointment cards */
+.appt-date-lg {
+    width: 3.5rem;
+}
+.appt-date-lg .appt-month { font-size: 0.7rem; padding: 0.2rem 0; }
+.appt-date-lg .appt-day { font-size: 1.45rem; padding: 0.3rem 0; }
+
+.appt-card { transition: border-color var(--transition-fast), transform var(--transition-base), box-shadow var(--transition-base); }
+.appt-card:hover { border-color: var(--color-primary-light); transform: translateY(-2px); }
+
+/* ============================================================
    List groups
    ============================================================ */
 .list-group-item {
