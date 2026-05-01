@@ -35,6 +35,11 @@
                                     <a class="nav-link {{ request()->routeIs('admin.doctors.*') ? 'active' : '' }}" href="{{ route('admin.doctors.index') }}">Doctors</a>
                                 </li>
                             @endif
+                            @if(Route::has('admin.reports.index'))
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}" href="{{ route('admin.reports.index') }}">Reports</a>
+                                </li>
+                            @endif
                         @elseif(Auth::user()->isDoctor())
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('doctor.dashboard') ? 'active' : '' }}" href="{{ route('doctor.dashboard') }}">Dashboard</a>

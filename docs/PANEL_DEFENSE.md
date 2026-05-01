@@ -10,7 +10,7 @@
 > When asked a question, answer in 1-3 sentences and stop; let the panel
 > follow up if they want more depth.
 >
-> Last updated: end of Phase 11 (prescriptions + PDF generation).
+> Last updated: end of Phase 12 (reports dashboard).
 
 ---
 
@@ -366,10 +366,39 @@ A: ~1.2 MB. Most of that is DomPDF embedding the DejaVu Sans font (used for Unic
 A: No. Three layers prevent it: (1) the route is behind `role:patient` or `role:doctor` middleware; (2) the controller `abort_if` matches the prescription's owning appointment to the authenticated user; (3) Laravel route-model binding ensures the URL `{prescription}` parameter resolves to a real DB row, not an arbitrary string. All three would have to fail simultaneously.
 
 ### Phase 12 — Reports dashboard with Chart.js
-- Why Chart.js over server-rendered charts?
-- What metrics are reported and why?
-- How is appointment data aggregated for the charts?
-- TBD
+
+**Q: Why Chart.js specifically?**
+A: It's the de-facto standard JS chart library — well-documented, MIT-licensed, ~85kb minified, supports all the chart types we need (doughnut, bar, line, horizontal bar). Alternatives like D3 are more powerful but require significantly more code; ApexCharts is similar in scope but less commonly seen in panel reviews. Per locked stack.
+
+**Q: Why load Chart.js from a CDN instead of npm?**
+A: We only use it on one page (`/admin/reports`). Adding it to the npm bundle would mean downloading ~85kb on every page that loads `app.js`, even login. Loading via CDN inside the reports view itself keeps the global bundle lean. The CDN URL is pinned to a specific version (`chart.js@4.4.6`) so it won't break when a new Chart.js drops.
+
+**Q: Why server-side aggregation in PHP/MySQL instead of fetching raw rows and aggregating client-side?**
+A: With even modest data volumes, sending raw appointment rows to the browser and aggregating in JS wastes bandwidth and exposes data the admin doesn't need to see (specific patient names per appointment, etc.). MySQL `GROUP BY` is efficient and indexed; the aggregated payload is tiny (a few labels + counts). It's also more privacy-respectful — only counts cross the wire for the status/department/timeline charts.
+
+**Q: Why these four charts specifically?**
+A: They answer the four most common questions an admin asks about a hospital: *"how is volume distributed across statuses?"* (doughnut), *"which departments are busiest?"* (bar), *"is volume trending up or down?"* (line), and *"who are our most-booked doctors?"* (horizontal bar). Each uses the chart type that conveys its question most directly.
+
+**Q: Why is the date-range fixed at "last 30 days" with no picker?**
+A: Out of scope for this build — the locked phase plan has Phase 12 deliver a Reports dashboard, not a configurable analytics suite. The query (`where('created_at', '>=', $start)`) is trivial to extend later by accepting a request parameter.
+
+**Q: How are cancelled appointments treated in the charts?**
+A: The status doughnut **includes** cancelled (it's information). The department bar, timeline line, and top-doctors bar all **exclude** cancelled (they answer "actual activity" questions). The exclusion is enforced in the JOIN clauses with `where('appointments.status', '!=', 'cancelled')`.
+
+**Q: Why does the time series use `DATE(created_at)` instead of `appointment_date`?**
+A: We're measuring *when patients booked*, not *when they're due to be seen*. A patient booking today for a visit two weeks out is a "today" data point — the line chart answers "is booking activity rising or falling?". For an "appointments per day held" chart we'd group on `appointment_date` instead.
+
+**Q: How would this perform at hospital-scale?**
+A: With 100k+ appointments, the four GROUP BY queries on indexed columns (status, doctor_id) take milliseconds. The line chart's `DATE(created_at)` grouping isn't index-friendly because it applies a function to the column — at scale we'd add a generated `created_date` column with its own index, or pre-compute daily aggregates in a `daily_metrics` table updated by a queued job. Out of scope for the current build but documented as the natural next step.
+
+**Q: Why an empty-state placeholder if there are zero appointments?**
+A: A blank `<canvas>` tag would render nothing, which looks broken. The conditional in the Blade view (`@if($kpis['total'] === 0)`) shows a friendly "no appointments yet" message with a hint about running the seeder — explicit emptiness is clearer than ambiguous emptiness.
+
+**Q: How is the seed data realistic for the panel demo?**
+A: `AppointmentSeeder` generates ~70 appointments with statuses weighted by date: future appointments are mostly `pending` or `confirmed`; past appointments are mostly `completed` with a small fraction of `cancelled` and `no_show`. Completed appointments get a medical record; 70% of those also get a prescription with 1-3 medications. The result feels like a hospital with real activity.
+
+**Q: How is privacy handled in the reports?**
+A: Admins see only aggregates (counts), not patient identities. Top-doctors chart shows doctor names because those are public-facing professional credentials. No medical content (diagnoses, prescriptions, reasons) appears anywhere in the reports. Per-patient data lives only in the patient/doctor flows, gated by per-record `abort_if` checks.
 
 ### Phase 13 — Stripe test-mode payments
 - Why Stripe test mode for an academic project?
