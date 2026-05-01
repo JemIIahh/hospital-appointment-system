@@ -24,7 +24,7 @@ class SlotService
         }
 
         $bookedTimes = $doctor->appointments()
-            ->where('appointment_date', $date->toDateString())
+            ->whereDate('appointment_date', $date->toDateString())
             ->where('status', '!=', 'cancelled')
             ->pluck('appointment_time')
             ->map(fn ($t) => Carbon::parse($t)->format('H:i:s'))

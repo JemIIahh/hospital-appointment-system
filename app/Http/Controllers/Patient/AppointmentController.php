@@ -85,7 +85,7 @@ class AppointmentController extends Controller
         try {
             $newAppointment = DB::transaction(function () use ($data, $patient) {
                 $existing = Appointment::where('doctor_id', $data['doctor_id'])
-                    ->where('appointment_date', $data['appointment_date'])
+                    ->whereDate('appointment_date', $data['appointment_date'])
                     ->where('appointment_time', $data['appointment_time'])
                     ->where('status', '!=', 'cancelled')
                     ->lockForUpdate()

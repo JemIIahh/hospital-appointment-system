@@ -37,11 +37,9 @@ class RegistrationTest extends TestCase
         $this->assertSame('patient', $user->role);
 
         // The Patient row was created in the same transaction.
-        $this->assertDatabaseHas('patients', [
-            'user_id'       => $user->id,
-            'date_of_birth' => '1995-06-15',
-            'gender'        => 'female',
-        ]);
+        $this->assertNotNull($user->patient);
+        $this->assertSame('female', $user->patient->gender);
+        $this->assertSame('1995-06-15', $user->patient->date_of_birth->toDateString());
     }
 
     public function test_registration_requires_demographic_fields(): void
