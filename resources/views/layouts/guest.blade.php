@@ -6,24 +6,51 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Hospital Appointment System') }}</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body>
-    <div class="d-flex flex-column min-vh-100 align-items-center justify-content-center py-4 px-3">
-        <a href="/" class="auth-brand mb-4">
-            <i class="bi bi-hospital"></i>{{ config('app.name') }}
-        </a>
+<body class="auth-page">
+    <div class="auth-shell">
+        {{-- Branded aside (hidden on mobile) --}}
+        <aside class="auth-aside">
+            <div class="auth-aside-content">
+                <a href="/" class="auth-aside-brand">
+                    <i class="bi bi-hospital"></i>
+                    <span>{{ config('app.name') }}</span>
+                </a>
 
-        <div class="card auth-card" style="width: 100%; max-width: 26rem;">
-            <div class="card-body">
+                <h2 class="auth-aside-headline">
+                    Healthcare,<br>without the queue.
+                </h2>
+                <p class="auth-aside-sub">
+                    Book a 30-minute consultation with one of our {{ \App\Models\Doctor::count() }} specialists.
+                    Real-time availability, instant confirmation, your records always accessible.
+                </p>
+
+                <ul class="auth-aside-features">
+                    <li><i class="bi bi-check-lg"></i> Specialists across {{ \App\Models\Department::count() }} departments</li>
+                    <li><i class="bi bi-check-lg"></i> Real-time slot availability</li>
+                    <li><i class="bi bi-check-lg"></i> Diagnoses &amp; prescriptions in your account</li>
+                    <li><i class="bi bi-check-lg"></i> Cancel anytime before your visit</li>
+                </ul>
+            </div>
+        </aside>
+
+        {{-- Form side --}}
+        <main class="auth-main">
+            <a href="/" class="auth-back">
+                <i class="bi bi-arrow-left"></i> Back to home
+            </a>
+
+            <div class="auth-form-wrap">
+                <a href="/" class="auth-mobile-brand">
+                    <i class="bi bi-hospital"></i>
+                    {{ config('app.name') }}
+                </a>
+
                 {{ $slot }}
             </div>
-        </div>
-
-        <p class="text-muted small mt-3 mb-0">
-            <a href="/" class="text-decoration-none text-muted">&larr; Back to home</a>
-        </p>
+        </main>
     </div>
 </body>
 </html>
