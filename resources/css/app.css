@@ -880,15 +880,123 @@ header.page-header h2 {
 }
 
 /* ============================================================
-   Slot-picker buttons (booking flow)
+   Booking flow (date pills, slot pills, step cards)
    ============================================================ */
-.slot-button {
-    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+.doctor-avatar-xl {
+    width: 5rem !important;
+    height: 5rem !important;
+    font-size: 1.65rem !important;
 }
-.slot-button:hover:not(:disabled) {
-    transform: translateY(-1px);
+
+.step-card {
+    border-color: var(--color-border);
+}
+.step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+    color: white;
+    font-weight: 700;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+    box-shadow: 0 4px 10px -2px rgba(79, 70, 229, 0.4);
+}
+
+.date-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 4.25rem;
+    padding: 0.7rem 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-text);
+    text-decoration: none;
+    line-height: 1.1;
+    transition: border-color var(--transition-fast), background var(--transition-fast),
+                color var(--transition-fast), transform var(--transition-fast),
+                box-shadow var(--transition-fast);
+}
+.date-pill:hover {
+    border-color: var(--color-primary-light);
+    background: var(--color-primary-soft);
+    color: var(--color-primary-dark);
+    transform: translateY(-2px);
     box-shadow: var(--shadow-sm);
 }
+.date-pill.is-selected {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 6px 14px -4px rgba(79, 70, 229, 0.45);
+}
+.date-pill-dow {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.75;
+    margin-bottom: 0.2rem;
+}
+.date-pill-day {
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1;
+}
+.date-pill-month {
+    font-size: 0.7rem;
+    opacity: 0.75;
+    margin-top: 0.15rem;
+}
+.date-pill.is-selected .date-pill-dow,
+.date-pill.is-selected .date-pill-month { opacity: 0.9; }
+
+.slot-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+    gap: 0.5rem;
+}
+.slot-pill {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-text);
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.55rem 0.75rem;
+    cursor: pointer;
+    transition: border-color var(--transition-fast), background var(--transition-fast),
+                color var(--transition-fast), transform var(--transition-fast),
+                box-shadow var(--transition-fast);
+}
+.slot-pill:hover:not(.is-disabled) {
+    border-color: var(--color-primary-light);
+    background: var(--color-primary-soft);
+    color: var(--color-primary-dark);
+    transform: translateY(-1px);
+}
+.slot-pill.is-selected {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 4px 10px -2px rgba(79, 70, 229, 0.4);
+}
+.slot-pill.is-disabled {
+    background: var(--color-bg);
+    color: var(--color-text-soft);
+    cursor: not-allowed;
+    text-decoration: line-through;
+    opacity: 0.6;
+}
+
+/* legacy slot-button kept as a no-op for any remaining references */
+.slot-button { transition: transform var(--transition-fast), box-shadow var(--transition-fast); }
 
 /* ============================================================
    Footer
