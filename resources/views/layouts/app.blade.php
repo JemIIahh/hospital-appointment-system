@@ -10,7 +10,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
-    <nav class="app-nav">
+    <nav class="app-nav navbar navbar-expand-lg">
         <div class="container app-nav-inner">
             <a class="app-nav-brand" href="{{ route('dashboard') }}">
                 <span class="app-nav-brand-icon"><i class="bi bi-hospital"></i></span>
