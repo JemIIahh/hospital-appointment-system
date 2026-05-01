@@ -10,7 +10,7 @@
 > When asked a question, answer in 1-3 sentences and stop; let the panel
 > follow up if they want more depth.
 >
-> Last updated: end of Phase 9 (consultation notes).
+> Last updated: end of Phase 10 (email notifications).
 
 ---
 
@@ -304,11 +304,31 @@ A: Two access patterns. `/patient/records` is for "show me my history" — appro
 **Q: Why does Phase 9 not include prescriptions?**
 A: The locked phase plan separates them: Phase 9 is "consultation notes" (medical_records); Phase 11 is "Prescriptions + PDF generation" with DomPDF. Splitting keeps each phase scoped — Phase 11 is mostly about DomPDF rendering, which is its own domain of complexity.
 
-### Phase 10 — Email notifications (SMTP via SendGrid)
-- Why SendGrid specifically?
-- How are queued emails handled?
-- What email events fire (booking confirmed, cancelled, etc.)?
-- TBD
+### Phase 10 — Email notifications
+
+**Q: Why SendGrid specifically?**
+A: SendGrid offers a free tier sufficient for an academic project (100 emails/day), reliable deliverability, and standard SMTP — no proprietary SDK needed. We just point Laravel's `MAIL_*` env vars at `smtp.sendgrid.net:587` and use an API key as the password. Equivalent services like Mailgun or Postmark would also work; SendGrid was the locked-stack choice.
+
+**Q: Why are emails sent synchronously instead of queued?**
+A: Synchronous keeps the infrastructure simple — no queue worker process to run. The log driver is instant; SendGrid SMTP would add 1-2s per request, which is acceptable for booking flows. If real-email latency becomes annoying we can flip the Mailables to `ShouldQueue` (one line each) and run `php artisan queue:work`. The `queue` table already exists from Phase 1.
+
+**Q: What happens if SendGrid is down when a patient books?**
+A: Mail dispatch is wrapped in `try/catch` so a mail failure logs a warning but doesn't roll back the booking. The audit trail in `laravel.log` records every failed send with the appointment ID. Panel-defensible: *"a transactional email is a notification, not the system of record — losing one shouldn't lose the booking it describes."*
+
+**Q: Why Markdown mailables instead of plain HTML?**
+A: Laravel's `<x-mail::message>` and `<x-mail::button>` components produce both HTML and plaintext versions automatically, render consistently across mail clients (Gmail, Outlook, Apple Mail), and look professional out of the box. Hand-written HTML emails are notoriously fragile — table layouts, inline styles, client-specific bugs.
+
+**Q: What email events fire?**
+A: Five mailables wired into the booking lifecycle: `AppointmentBookedMail` (to patient on booking), `AppointmentConfirmedMail` (to patient when doctor confirms), `AppointmentCancelledMail` (to the *other* party when one side cancels), `AppointmentNoShowMail` (to patient when doctor marks no-show), and `DoctorWelcomeMail` (to a new doctor with their temporary password when admin creates the account).
+
+**Q: Why is the doctor's temp password emailed AND shown in the success flash?**
+A: Belt-and-braces during development. The flash gives instant feedback even if the mail driver fails; the email is the more secure long-term channel. Phase 14 polish removes the flash once SMTP is wired to a real provider, leaving only the email.
+
+**Q: How is `MAIL_FROM_ADDRESS` configured?**
+A: `noreply@hospital.test` — `.test` is an IANA-reserved TLD that can never resolve to a real domain, so even if a misconfigured email leaks, it can't reach an unintended recipient. In a real deployment this would be a verified SendGrid sender like `noreply@hospital.example.org`.
+
+**Q: Why isn't email verification enforced for new patients?**
+A: Verification email goes out (Laravel's built-in `Registered` event triggers it), but we don't gate dashboard access behind verification yet. Doing so during the build phase makes registration testing painful (every test patient would need their inbox dug for a link). Phase 14 polish enables enforcement once real SMTP is configured.
 
 ### Phase 11 — Prescriptions + DomPDF
 - Why generate PDFs server-side instead of using browser print?

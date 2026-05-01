@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Patient;
 
 use App\Http\Controllers\Controller;
+use App\Mail\AppointmentBookedMail;
+use App\Mail\AppointmentCancelledMail;
 use App\Models\Appointment;
 use App\Models\Doctor;
 use App\Services\SlotService;
@@ -11,6 +13,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 
 class AppointmentController extends Controller
@@ -76,9 +80,10 @@ class AppointmentController extends Controller
         ]);
 
         $patient = Auth::user()->patient;
+        $newAppointment = null;
 
         try {
-            DB::transaction(function () use ($data, $patient) {
+            $newAppointment = DB::transaction(function () use ($data, $patient) {
                 $existing = Appointment::where('doctor_id', $data['doctor_id'])
                     ->where('appointment_date', $data['appointment_date'])
                     ->where('appointment_time', $data['appointment_time'])
@@ -99,7 +104,7 @@ class AppointmentController extends Controller
                     throw new \RuntimeException('That time slot is not bookable.');
                 }
 
-                Appointment::create([
+                return Appointment::create([
                     'patient_id'       => $patient->id,
                     'doctor_id'        => $data['doctor_id'],
                     'appointment_date' => $data['appointment_date'],
@@ -111,6 +116,13 @@ class AppointmentController extends Controller
         } catch (\RuntimeException $e) {
             return back()->withInput()->with('error', $e->getMessage());
         }
+
+        $this->sendMailSafely(
+            fn () => Mail::to($newAppointment->patient->user->email)
+                ->send(new AppointmentBookedMail($newAppointment->load('patient.user', 'doctor.user', 'doctor.department'))),
+            'AppointmentBookedMail',
+            $newAppointment->id,
+        );
 
         return redirect()
             ->route('patient.appointments.index')
@@ -140,8 +152,34 @@ class AppointmentController extends Controller
 
         $appointment->update(['status' => 'cancelled']);
 
+        $this->sendMailSafely(
+            fn () => Mail::to($appointment->doctor->user->email)
+                ->send(new AppointmentCancelledMail(
+                    $appointment->load('patient.user', 'doctor.user', 'doctor.department'),
+                    'patient'
+                )),
+            'AppointmentCancelledMail (to doctor)',
+            $appointment->id,
+        );
+
         return redirect()
             ->route('patient.appointments.index')
             ->with('success', 'Appointment cancelled.');
+    }
+
+    /**
+     * Run a mail dispatch closure but don't let mail failures bubble up
+     * — a SendGrid outage shouldn't roll back a successful booking.
+     */
+    private function sendMailSafely(\Closure $send, string $mailable, int $appointmentId): void
+    {
+        try {
+            $send();
+        } catch (\Throwable $e) {
+            Log::warning("Failed to send {$mailable}", [
+                'appointment_id' => $appointmentId,
+                'error'          => $e->getMessage(),
+            ]);
+        }
     }
 }

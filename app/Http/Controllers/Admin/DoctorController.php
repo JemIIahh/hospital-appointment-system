@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\DoctorWelcomeMail;
 use App\Models\Department;
 use App\Models\Doctor;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -39,7 +42,7 @@ class DoctorController extends Controller
 
         $tempPassword = Str::password(12, letters: true, numbers: true, symbols: false);
 
-        DB::transaction(function () use ($data, $tempPassword) {
+        $newDoctor = DB::transaction(function () use ($data, $tempPassword) {
             $user = User::create([
                 'name'     => $data['name'],
                 'email'    => $data['email'],
@@ -48,7 +51,7 @@ class DoctorController extends Controller
                 'role'     => 'doctor',
             ]);
 
-            Doctor::create([
+            return Doctor::create([
                 'user_id'          => $user->id,
                 'department_id'    => $data['department_id'],
                 'specialization'   => $data['specialization'],
@@ -58,9 +61,25 @@ class DoctorController extends Controller
             ]);
         });
 
+        // Send welcome email with temp password. Failure is logged but
+        // doesn't roll back the doctor creation — the flash message still
+        // shows the password as a fallback.
+        try {
+            Mail::to($newDoctor->user->email)
+                ->send(new DoctorWelcomeMail(
+                    $newDoctor->load('user', 'department'),
+                    $tempPassword
+                ));
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send DoctorWelcomeMail', [
+                'doctor_id' => $newDoctor->id,
+                'error'     => $e->getMessage(),
+            ]);
+        }
+
         return redirect()
             ->route('admin.doctors.index')
-            ->with('success', "Doctor {$data['name']} created. Temporary password for {$data['email']}: {$tempPassword} — share securely; the doctor can change it via Profile after first login.");
+            ->with('success', "Doctor {$data['name']} created. A welcome email has been sent to {$data['email']}. Temporary password (also visible here as fallback): {$tempPassword}");
     }
 
     public function edit(Doctor $doctor): View

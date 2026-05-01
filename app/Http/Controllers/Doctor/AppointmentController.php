@@ -3,10 +3,15 @@
 namespace App\Http\Controllers\Doctor;
 
 use App\Http\Controllers\Controller;
+use App\Mail\AppointmentCancelledMail;
+use App\Mail\AppointmentConfirmedMail;
+use App\Mail\AppointmentNoShowMail;
 use App\Models\Appointment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 
 class AppointmentController extends Controller
@@ -71,6 +76,8 @@ class AppointmentController extends Controller
 
         $appointment->update(['status' => $new]);
 
+        $this->dispatchStatusMail($appointment->fresh()->load('patient.user', 'doctor.user', 'doctor.department'), $new);
+
         $message = match ($new) {
             'confirmed' => 'Appointment confirmed. The patient will be notified.',
             'completed' => 'Appointment marked as completed.',
@@ -80,5 +87,33 @@ class AppointmentController extends Controller
         };
 
         return back()->with('success', $message);
+    }
+
+    /**
+     * Send the right mail for each status change. Mail failures are logged
+     * but don't abort the status update.
+     */
+    private function dispatchStatusMail(Appointment $appointment, string $newStatus): void
+    {
+        $mailable = match ($newStatus) {
+            'confirmed' => new AppointmentConfirmedMail($appointment),
+            'cancelled' => new AppointmentCancelledMail($appointment, 'doctor'),
+            'no_show'   => new AppointmentNoShowMail($appointment),
+            default     => null,
+        };
+
+        if (! $mailable) {
+            return;
+        }
+
+        try {
+            Mail::to($appointment->patient->user->email)->send($mailable);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send appointment status mail', [
+                'appointment_id' => $appointment->id,
+                'new_status'     => $newStatus,
+                'error'          => $e->getMessage(),
+            ]);
+        }
     }
 }
