@@ -261,4 +261,4 @@ None of these are wired in the current build. A real deployment would add them.
 
 - Docker / Kubernetes — the app deploys fine to a single VM; container orchestration is overkill for a single hospital.
 - Multi-region / read replicas — would matter at hospital-network scale (50+ hospitals); a single hospital doesn't need them.
-- Stripe webhooks — payment integration was scoped out of this academic build (see `docs/PANEL_DEFENSE.md` §11 Phase 13).
+- Payment gateway / webhooks — payment processing is out of scope for this build (see `docs/PANEL_DEFENSE.md` → "Payment / billing").

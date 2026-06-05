@@ -150,7 +150,7 @@
                     <h6 class="mb-2">Consultation fee</h6>
                     <p class="text-primary fw-semibold mb-1">${{ number_format($appointment->doctor->consultation_fee, 2) }}</p>
                     <p class="text-muted small mb-0">
-                        Payment will be collected at the appointment (online payment in Phase 13).
+                        Payment is collected at the hospital reception.
                     </p>
                 </div>
             </div>

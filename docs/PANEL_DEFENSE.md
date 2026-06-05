@@ -57,8 +57,8 @@ A: Laravel 11's officially tested PHP versions are 8.2-8.4. Homebrew installed P
 
 ## 2. Database design
 
-**Q: Why 10 tables in third normal form?**
-A: 3NF eliminates redundancy and update anomalies — each fact is stored exactly once. The 10-table breakdown maps directly to the domain entities: users (auth), patients/doctors (role-specific data), departments, doctor_schedules (when doctors work), appointments (the join), and the consultation aftermath (medical_records, prescriptions, prescription_items, payments). Smaller schemas would force compromises like storing demographics on the users table.
+**Q: Why these tables in third normal form?**
+A: 3NF eliminates redundancy and update anomalies — each fact is stored exactly once. The schema is implemented as 11 migrations: three framework tables (users, cache, queued jobs) and eight domain tables that map directly to the domain entities — patients/doctors (role-specific data), departments, doctor_schedules (when doctors work), appointments (the join), and the consultation aftermath (medical_records, prescriptions, prescription_items). Smaller schemas would force compromises like storing demographics on the users table.
 
 **Q: Why is the role enum on `users` instead of a separate roles table with a many-to-many?**
 A: Each user is exactly one role in this domain — there are no doctor-admins or patient-doctors. A many-to-many would over-engineer for a degree of flexibility we don't need, while making queries like "list all patients" require a join. The enum constraint at the DB level enforces the same integrity.
@@ -400,16 +400,13 @@ A: `AppointmentSeeder` generates ~70 appointments with statuses weighted by date
 **Q: How is privacy handled in the reports?**
 A: Admins see only aggregates (counts), not patient identities. Top-doctors chart shows doctor names because those are public-facing professional credentials. No medical content (diagnoses, prescriptions, reasons) appears anywhere in the reports. Per-patient data lives only in the patient/doctor flows, gated by per-record `abort_if` checks.
 
-### Phase 13 — Stripe payments (intentionally skipped)
+### Payment / billing (out of scope)
 
-**Q: There's a `payments` table in the schema but no payment UI. Why?**
-A: The schema was designed for the full hospital domain — patients owe consultation fees and a payment system needs a record of the transaction. Phase 13 was originally Stripe test-mode integration, but that was scoped out of the academic submission as a deliberate trim. The table persists in the design so the schema remains complete and FK-correct, and the academic project demonstrates the schema design without committing to a payment integration. In a real deployment, a Phase 13 follow-up would wire Stripe Checkout to populate this table.
+**Q: Why doesn't the system handle online payment for consultations?**
+A: Payment processing is out of scope. The system focuses on the appointment lifecycle — booking, consultation records, and prescriptions. Each doctor record carries a `consultation_fee` that is displayed to the patient for information, but settlement happens at the hospital reception, outside the system. Keeping payment out avoids a hard dependency on an external payment provider for the demo and keeps the academic build focused and self-contained.
 
-**Q: How would you have built it if you weren't scoping it out?**
-A: Stripe Checkout (the hosted payment page) for simplicity — patient clicks "Pay now" on their appointment, redirected to Stripe, returns with a `session_id`. A webhook handler on `/stripe/webhook` listens for `checkout.session.completed` events and writes a row to `payments` with status='paid'. Idempotency comes from Stripe's `payment_intent.id` stored as `transaction_reference`.
-
-**Q: How would the booking flow integrate with payments?**
-A: Two reasonable patterns: (1) require payment up-front to convert pending → confirmed; (2) allow booking on credit and reconcile payment after the visit. For an outpatient hospital, pattern (2) matches reality better — patients sometimes pay at reception. Either way, Stripe Checkout would be the integration surface and the existing `payments.status` enum (pending/paid/failed/refunded) covers the lifecycle.
+**Q: Could payment be added later?**
+A: Yes — it's a natural future enhancement. A hosted-checkout provider (e.g. Paystack in test mode for the Nigerian context) would be wired into the booking flow, with a webhook writing a transaction record and either gating confirmation on payment or reconciling after the visit. It was deliberately left out of this submission rather than half-built.
 
 ### Phase 14 — Polish, testing, deployment
 
@@ -438,7 +435,7 @@ A: An academic submission is graded on the codebase and the demonstration, not o
 A: For first deployments, `php artisan migrate:rollback` reverts the latest migration batch. For subsequent deploys, `git checkout <previous-tag>` and re-run the deploy step (`composer install`, `npm run build`, `migrate --force`, cache regeneration) — assuming new deploys are tagged, which is in the deployment doc as a recommended practice. Database backups (also in the doc, Section 8) cover the case where a migration corrupts data.
 
 **Q: How was AI used during the build, and is that disclosed?**
-A: I worked alongside Anthropic's Claude (Claude Code interface) for code generation and architectural advice across all 14 phases. Every commit includes a `Co-Authored-By: Claude` trailer in its message, so the git log is transparent about the collaboration. Architectural decisions (the locked stack, the schema, the phase plan, the trim of Phase 13) and verification of every checkpoint were mine. AI sped up implementation; it did not replace the design or evaluation work.
+A: I worked alongside Anthropic's Claude (Claude Code interface) for code generation and architectural advice across all 14 phases. Every commit includes a `Co-Authored-By: Claude` trailer in its message, so the git log is transparent about the collaboration. Architectural decisions (the locked stack, the schema, the phase plan, the scope boundaries) and verification of every checkpoint were mine. AI sped up implementation; it did not replace the design or evaluation work.
 
 ---
 

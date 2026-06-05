@@ -48,11 +48,6 @@ class Appointment extends Model
         return $this->hasOne(Prescription::class);
     }
 
-    public function payment(): HasOne
-    {
-        return $this->hasOne(Payment::class);
-    }
-
     public function scopeActive(Builder $query): void
     {
         $query->where('status', '!=', 'cancelled');
