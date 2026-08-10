@@ -9,6 +9,9 @@ php artisan migrate --force
 # Seed departments if they don't exist yet.
 php artisan db:seed --class=DepartmentSeeder --force
 
+# Seed admin user and sample doctors (idempotent — safe to re-run).
+php artisan db:seed --class=ProductionSeeder --force
+
 # Rebuild Laravel's production caches for faster boot.
 php artisan config:cache
 php artisan route:cache
